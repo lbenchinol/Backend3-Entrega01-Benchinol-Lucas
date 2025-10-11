@@ -1,4 +1,5 @@
 import { usersService } from "../services/index.js"
+import bcrypt from "bcrypt";
 
 const getAllUsers = async (req, res) => {
     try {
@@ -43,9 +44,23 @@ const deleteUser = async (req, res) => {
     }
 }
 
+const createUser = async (req, res) => {
+    try {
+        const { first_name, last_name, email, password, role = 'user' } = req.body;
+        if (!first_name || !last_name || !email || !password) return res.status(400).send({ status: "error", error: "Incomplete values" });
+        const passwordEncrypted = bcrypt.hashSync(password, 10);
+        const user = { first_name, last_name, email, passwordEncrypted, role };
+        const result = await usersService.create(user);
+        res.send({ status: "success", payload: result });
+    } catch (error) {
+        res.status(500).send({ status: "error", error: "Could not create pet" });
+    }
+}
+
 export default {
     deleteUser,
     getAllUsers,
     getUser,
-    updateUser
+    updateUser,
+    createUser
 }
